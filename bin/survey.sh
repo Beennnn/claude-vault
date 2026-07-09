@@ -26,7 +26,7 @@ names=()
   [[ "$ln" =~ ^[[:space:]]*(#|$) ]] || names+=("$ln")
 done < "$RULES/ignore-dirs.txt"
 for n in ${SURVEY_IGNORE_NAMES:-}; do names+=("$n"); done
-nameargs=(); for n in "${names[@]}"; do nameargs+=( -name "$n" -o ); done; nameargs+=( -false )
+nameargs=( -name ".*" -o ); for n in "${names[@]}"; do nameargs+=( -name "$n" -o ); done; nameargs+=( -false )  # prune ALL dot-directories (config/cache/secrets — never user documents)
 
 # --- path-substring excludes = rules/ignore-paths.txt ---
 igfile="$(mktemp)"; [ -f "$RULES/ignore-paths.txt" ] && grep -vE '^[[:space:]]*(#|$)' "$RULES/ignore-paths.txt" > "$igfile"
