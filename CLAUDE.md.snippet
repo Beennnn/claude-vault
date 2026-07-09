@@ -1,0 +1,20 @@
+# --- claude-vault policy (append to ~/.claude/CLAUDE.md) -----------------------------------
+## Storage policy — 3 tiers (enforced)
+
+Where you (Claude) MUST write, by nature of the file — respect on EVERY write:
+
+- **Tier 1 — `~/dev/` = CODE, git ONLY.** A hierarchy whose LEAVES are all **private, pushed**
+  git repos (sub-containers grouping related repos are fine). NEVER put non-git content at any
+  level. Backup = push to the remote.
+- **Tier 2 — `<VAULT_DIR>` = everything durable non-code** you produce (notes, exports, working
+  files). It is a cloud-synced folder → replicated off-machine automatically. Write durable
+  non-code HERE, never at `~` or inside `~/dev`.
+- **Tier 3 — `~/.claude/` = disposable/regenerable.** Memories + this `CLAUDE.md` live here
+  (Claude Code reads them here) and stay LOCAL, but are backed up to the vault automatically:
+  a `Stop` hook copies them after every response, a `SessionStart` hook catches up + relocates
+  any stray non-git out of `~/dev`.
+
+A launchd **watchdog** flags (between sessions) any repo not committed/pushed or any non-git
+file in `~/dev`. It cannot write the cloud (macOS TCC blocks background jobs); the hooks do,
+because they run inside Claude Code (which has Full Disk Access).
+# --- end claude-vault policy ---------------------------------------------------------------

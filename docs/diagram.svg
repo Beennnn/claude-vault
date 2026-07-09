@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8b8fa3"/></marker>
+    <marker id="arrG" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/></marker>
+  </defs>
+  <rect width="1000" height="560" rx="16" fill="#f6f7fb"/>
+  <text x="500" y="42" font-size="24" font-weight="800" fill="#1b1233" text-anchor="middle">claude-vault — 3 tiers, automatic backup</text>
+
+  <!-- Claude Code session -->
+  <rect x="360" y="70" width="280" height="66" rx="12" fill="#8b5cf6"/>
+  <text x="500" y="100" font-size="19" font-weight="700" fill="#fff" text-anchor="middle">Claude Code session</text>
+  <text x="500" y="122" font-size="13" fill="#e9d5ff" text-anchor="middle">has Full Disk Access → hooks can write the cloud</text>
+
+  <!-- hooks -->
+  <rect x="120" y="180" width="240" height="54" rx="10" fill="#fff" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="240" y="203" font-size="15" font-weight="700" fill="#5b21b6" text-anchor="middle">Stop hook</text>
+  <text x="240" y="222" font-size="12" fill="#6b7280" text-anchor="middle">after every response → backup</text>
+  <rect x="640" y="180" width="240" height="54" rx="10" fill="#fff" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="760" y="203" font-size="15" font-weight="700" fill="#5b21b6" text-anchor="middle">SessionStart hook</text>
+  <text x="760" y="222" font-size="12" fill="#6b7280" text-anchor="middle">catch-up + relocate stray</text>
+  <line x1="420" y1="136" x2="300" y2="178" stroke="#8b8fa3" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="580" y1="136" x2="700" y2="178" stroke="#8b8fa3" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Tier 1 -->
+  <rect x="60" y="300" width="270" height="120" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="80" y="330" font-size="17" font-weight="800" fill="#4338ca">Tier 1 · ~/dev</text>
+  <text x="80" y="356" font-size="13.5" fill="#374151">code — git repos only</text>
+  <text x="80" y="378" font-size="13.5" fill="#374151">private, committed, pushed</text>
+  <text x="80" y="404" font-size="12.5" fill="#6b7280">backup → git remote (GitHub/GitLab)</text>
+
+  <!-- Tier 2 -->
+  <rect x="365" y="300" width="270" height="120" rx="12" fill="#ecfeff" stroke="#06b6d4" stroke-width="2"/>
+  <text x="385" y="330" font-size="17" font-weight="800" fill="#0e7490">Tier 2 · vault</text>
+  <text x="385" y="356" font-size="13.5" fill="#374151">everything durable non-code</text>
+  <text x="385" y="378" font-size="13.5" fill="#374151">+ memories &amp; CLAUDE.md (mirror)</text>
+  <text x="385" y="404" font-size="12.5" fill="#6b7280">cloud folder — Drive / iCloud / Dropbox</text>
+
+  <!-- Tier 3 -->
+  <rect x="670" y="300" width="270" height="120" rx="12" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2"/>
+  <text x="690" y="330" font-size="17" font-weight="800" fill="#4b5563">Tier 3 · ~/.claude</text>
+  <text x="690" y="356" font-size="13.5" fill="#374151">transcripts, cache, plugins</text>
+  <text x="690" y="378" font-size="13.5" fill="#374151">disposable / regenerable</text>
+  <text x="690" y="404" font-size="12.5" fill="#6b7280">memories live here (mirrored →)</text>
+
+  <!-- hook arrows to vault -->
+  <line x1="240" y1="234" x2="440" y2="298" stroke="#8b8fa3" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="760" y1="234" x2="560" y2="298" stroke="#8b8fa3" stroke-width="2" marker-end="url(#arr)"/>
+  <!-- tier3 -> tier2 mirror -->
+  <line x1="668" y1="360" x2="637" y2="360" stroke="#06b6d4" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- NAS -->
+  <rect x="365" y="470" width="270" height="56" rx="10" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="500" y="495" font-size="15" font-weight="700" fill="#15803d" text-anchor="middle">NAS (off-machine)</text>
+  <text x="500" y="514" font-size="12" fill="#16a34a" text-anchor="middle">cloud client replicates the vault continuously</text>
+  <line x1="500" y1="420" x2="500" y2="468" stroke="#22c55e" stroke-width="2.5" marker-end="url(#arrG)"/>
+
+  <!-- watchdog -->
+  <rect x="60" y="474" width="250" height="48" rx="10" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/>
+  <text x="185" y="495" font-size="13.5" font-weight="700" fill="#b45309" text-anchor="middle">launchd watchdog (no FDA)</text>
+  <text x="185" y="513" font-size="11.5" fill="#92400e" text-anchor="middle">flags unpushed / stray — notify only</text>
+  <line x1="185" y1="474" x2="185" y2="422" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+</svg>

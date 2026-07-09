@@ -1,0 +1,30 @@
+{
+  "//": "claude-vault hooks — merge this into the \"hooks\" object of ~/.claude/settings.json.",
+  "//2": "install.sh does this merge for you (with jq). Shown here for reference / manual setup.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.local/share/claude-vault/bin/backup-durable.sh",
+            "timeout": 15,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.local/share/claude-vault/bin/relocate.sh",
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
