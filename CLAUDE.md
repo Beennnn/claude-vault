@@ -32,6 +32,22 @@ cloud — a plain `launchd`/`cron` job cannot (macOS TCC). See `docs/architectur
 6. **Tell the user** to mark `VAULT_DIR` "Available offline" in their cloud client, and — if on
    Google Drive/Synology — that Cloud Sync will replicate it to the NAS.
 
+## Ongoing: the disk survey (if enabled)
+
+If `SURVEY_ROOTS` is set, a `SessionStart` hook runs `bin/survey.sh`, which reports durable
+local files sitting **outside every backed-up zone**. When you see its line at session start
+(`🔎 memvault survey: N file(s)…`), **read the report** (`~/.claude/memvault-survey.txt`) and
+**ask the user how to protect each file/folder**, offering the three strategies from
+[`docs/strategies.md`](docs/strategies.md):
+
+- **(a) relocate** it into the vault (for movable files),
+- **(b)** have the cloud client **back up its folder in place** (for Downloads/Desktop/Documents),
+- **(c) symlink** a fixed-location folder into the vault (for app-constrained paths).
+
+When the user picks (b) for a folder, **add that folder to `BACKED_UP_ZONES`** in their config so
+the survey stops flagging it. Never move a user's files without asking. Read
+[`docs/lessons.md`](docs/lessons.md) before touching symlinks or verifying a cloud copy.
+
 ## Important cautions
 
 - **Never delete** user data. Relocations go to `vault/_relocated/` (quarantine).

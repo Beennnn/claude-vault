@@ -29,13 +29,13 @@ import json, sys, os
 settings_path, share = sys.argv[1], sys.argv[2]
 d = json.load(open(settings_path)) if os.path.exists(settings_path) else {}
 hooks = d.setdefault("hooks", {})
-def ensure(event, cmd):
+def ensure(event, cmd, asy=True):
     arr = hooks.setdefault(event, [])
     if not arr:
         arr.append({"hooks": []})
     entry = arr[0].setdefault("hooks", [])
     if not any(h.get("command") == cmd for h in entry):
-        entry.append({"type": "command", "command": cmd, "timeout": 30, "async": True})
+        entry.append({"type": "command", "command": cmd, "timeout": 30, "async": asy})
 def ensure_matched(event, matcher, cmd):
     arr = hooks.setdefault(event, [])
     block = next((b for b in arr if b.get("matcher") == matcher), None)
@@ -47,9 +47,10 @@ def ensure_matched(event, matcher, cmd):
         entry.append({"type": "command", "command": cmd, "timeout": 15, "async": True})
 ensure("Stop",         f"bash {share}/bin/backup-durable.sh")
 ensure("SessionStart", f"bash {share}/bin/relocate.sh")
+ensure("SessionStart", f"bash {share}/bin/survey.sh", asy=False)  # sync: output reaches Claude
 ensure_matched("PostToolUse", "Write|Edit", f"bash {share}/bin/backup-on-write.sh")
 json.dump(d, open(settings_path, "w"), indent=2)
-print("  hooks OK (Stop + SessionStart + PostToolUse)")
+print("  hooks OK (Stop + SessionStart×2 + PostToolUse)")
 PY
 
 # --- 3. launchd watchdog -------------------------------------------------------------------
