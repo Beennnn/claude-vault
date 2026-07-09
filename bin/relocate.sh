@@ -36,7 +36,7 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
     done
     # 2b. relocate stray files (outside any repo), preserving their group path
     find "$root" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -mmin +5 -print 2>/dev/null \
-      | grep -vx "$root/CLAUDE.md" | while IFS= read -r f; do
+      | grep -vx "$root/CLAUDE.md" | grep -v "/\\.[^/]*/" | while IFS= read -r f; do
         rel="${f#"$root"/}"
         grp="${rel%%/*}"
         if [ "$grp" != "$rel" ] && [ -d "$root/$grp" ]; then
