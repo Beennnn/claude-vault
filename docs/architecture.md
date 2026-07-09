@@ -60,12 +60,32 @@ touches the cloud.
 
 | Trigger | Script | Guarantees |
 |---|---|---|
-| `Stop` hook (every response) | `backup-durable.sh` | memories + `CLAUDE.md` mirrored on the fly |
+| `Stop` hook (every response) | `backup-durable.sh` | memories (**exact mirror**, incl. deletions) + global `CLAUDE.md` + `~/dev` governance anchors mirrored; coverage self-check flags any gap |
 | `SessionStart` hook | `relocate.sh` | catch-up backup; stray non-git moved out of `~/dev`; unpushed repos flagged |
 | launchd (3h + login) | `watchdog.sh` | passive alert on unpushed repos / non-git in `~/dev` |
 
-Nothing is ever deleted. Relocations are **quarantined** in `vault/_relocated/<date>/` for you
-to triage.
+Relocations are **quarantined** in `vault/_relocated/<date>/` for you to triage. The one place
+memvault *does* delete is the **memory mirror**: `rsync --delete` makes `vault/projects/<name>/memory/`
+an exact copy of the source memory dir, so a memory you **delete or move** disappears from the
+vault too (without it, an additive-only backup keeps stale copies forever). `--delete` is scoped
+to that pure mirror only — never to aggregate dirs like `artifacts/` that hold vault-only content.
+
+### The coverage invariant — exemptions must be paired with backup
+
+`relocate.sh` deliberately **leaves some files in `~/dev`** instead of quarantining them: the
+`DEV_ROOT/CLAUDE.md` structure doc and the declared `DEV_ANCHOR_DIRS` (non-code launch anchors
+like `perso`/`pro`). These are durable but **unversioned** — so if the relocator exempts a file
+from quarantine, `backup-durable.sh` **must** back it up, or it falls through the cracks (single
+local copy, lost on disk failure). The invariant:
+
+> **anything the relocator leaves in `DEV_ROOT` (its exemptions) is backed up to the vault.**
+
+Because every `cp`/`rsync` is best-effort (`|| true`, so a cloud/TCC hiccup never blocks an
+assistant response), a failure would otherwise be **silent**. `backup-durable.sh` therefore ends
+with a **coverage self-check** that re-asserts every durable it owns actually reached the vault
+and prints `⚠ UNBACKED <path>` for any miss. `relocate.sh` captures that output into
+`~/.claude/memvault.log`, so a gap surfaces at the next **SessionStart** instead of being
+discovered only after a disk failure.
 
 ## Portability
 
