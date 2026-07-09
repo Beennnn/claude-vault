@@ -13,6 +13,14 @@ source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 LOG="$CLAUDE_DIR/memvault.log"
 stamp="$(date '+%Y-%m-%d %H:%M:%S')"
 
+# Exempt declared non-code launch anchors (DEV_ANCHOR_DIRS, e.g. 'perso') from quarantine: they
+# live in DEV_ROOT without being git repos on purpose, just to give a non-code project a cwd.
+_anchor_filter() {
+  [ -z "${DEV_ANCHOR_DIRS:-}" ] && { cat; return; }
+  local pat=""; for a in $DEV_ANCHOR_DIRS; do pat="${pat:+$pat|}$DEV_ROOT/$a/"; done
+  grep -Ev "^($pat)" || true
+}
+
 {
   echo "=== $stamp relocate/backup ==="
 
@@ -23,7 +31,7 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
   for root in "$DEV_ROOT" ${EXTRA_DEV_ROOTS:-}; do
     [ -d "$root" ] || continue
     find "$root" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -mmin +5 -print 2>/dev/null \
-      | grep -vx "$root/CLAUDE.md" | grep -v "/\\.[^/]*/" | while IFS= read -r f; do
+      | grep -vx "$root/CLAUDE.md" | grep -v "/\\.[^/]*/" | _anchor_filter | while IFS= read -r f; do
         rel="${f#"$root"/}"
         dest="$VAULT_DIR/_relocated/$(date +%Y%m%d-%H%M)/$rel"    # git-only zone → quarantine
         mkdir -p "$(dirname "$dest")"

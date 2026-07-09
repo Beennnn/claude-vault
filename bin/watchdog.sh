@@ -11,6 +11,15 @@ source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 LOG="$CLAUDE_DIR/memvault-watchdog.log"
 issues=()
 
+# Filter out paths under declared non-code launch anchors (DEV_ANCHOR_DIRS): dirs that legitimately
+# live in DEV_ROOT without being git repos, purely to give a non-code project a cwd to launch from
+# (e.g. 'perso'). They're exempt from the git-only rule by design.
+_anchor_filter() {
+  [ -z "${DEV_ANCHOR_DIRS:-}" ] && { cat; return; }
+  local pat=""; for a in $DEV_ANCHOR_DIRS; do pat="${pat:+$pat|}$DEV_ROOT/$a/"; done
+  grep -Ev "^($pat)" || true
+}
+
 # Auto-push first (no-op unless AUTO_PUSH=true) so the checks below reflect the post-push state.
 # git push is network-only → works from launchd (no FDA needed).
 bash "$(dirname "$0")/push-repos.sh" 2>/dev/null || true
@@ -30,7 +39,7 @@ done < <(find "$DEV_ROOT" ${EXTRA_DEV_ROOTS:-} -name .git -maxdepth 4 2>/dev/nul
 
 # DEV_ROOT hygiene: no non-git files outside repos
 nongit="$(find "$DEV_ROOT" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -print 2>/dev/null \
-  | grep -vx "$DEV_ROOT/CLAUDE.md" | grep -v '/\.claude/' | head -5 || true)"
+  | grep -vx "$DEV_ROOT/CLAUDE.md" | grep -v '/\.claude/' | _anchor_filter | head -5 || true)"
 [ -n "$nongit" ] && issues+=("non-git in $(basename "$DEV_ROOT"): $(echo "$nongit" | tr '\n' ' ')")
 
 ts="$(date '+%Y-%m-%d %H:%M:%S')"

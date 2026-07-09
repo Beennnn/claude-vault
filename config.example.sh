@@ -21,6 +21,13 @@ VAULT_DIR="${HOME}/gdrive/claude"
 # --- Optional: extra folders to treat as "must be a git repo" beyond DEV_ROOT (space-separated) ---
 EXTRA_DEV_ROOTS=""
 
+# --- Optional: non-code launch anchors inside DEV_ROOT (space-separated dir names) ---
+# Dirs that legitimately live in DEV_ROOT WITHOUT being git repos, purely to give a non-code
+# Claude project a working dir to launch from (so its sessions key to that project). They are
+# exempt from the "git-only" rule: the watchdog won't flag them, the relocator won't quarantine
+# their files. Example: a personal-life project launched from ~/dev/perso → DEV_ANCHOR_DIRS="perso"
+DEV_ANCHOR_DIRS=""
+
 # --- Optional: disk survey ------------------------------------------------------------------
 # Find durable local files that are NOT in any backed-up zone, so Claude can ask you (at
 # session start) how to protect them. Leave SURVEY_ROOTS empty to disable.
