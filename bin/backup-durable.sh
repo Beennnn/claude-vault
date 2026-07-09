@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# claude-vault — "on-the-fly" backup of durable local state to the cloud vault.
+# memvault — "on-the-fly" backup of durable local state to the cloud vault.
 #
 # Wired to the Claude Code `Stop` hook → runs after EVERY assistant response, INSIDE the
 # Claude Code process, which already holds Full Disk Access. That is the whole trick: a
 # launchd/cron job CANNOT write to a cloud folder on macOS (TCC → "Operation not permitted"),
 # but a hook inherits Claude Code's FDA and can. Fast + idempotent (rsync copies only diffs).
 set -euo pipefail
-source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/claude-vault/config.sh}"
+source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 
 mkdir -p "$VAULT_DIR/memory" 2>/dev/null || true
 

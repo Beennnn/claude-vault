@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# claude-vault — configuration.
+# memvault — configuration.
 # Copy this file to  config.sh  and edit the paths for your machine.
-# install.sh copies it to  ~/.config/claude-vault/config.sh  (read by every script).
+# install.sh copies it to  ~/.config/memvault/config.sh  (read by every script).
 
 # --- Tier 3 : Claude Code's own data directory (where memories + CLAUDE.md live) ---
 CLAUDE_DIR="${HOME}/.claude"

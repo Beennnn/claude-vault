@@ -1,10 +1,10 @@
-# claude-vault — instructions for Claude
+# memvault — instructions for Claude
 
 **This repo configures Claude Code itself.** If a user opens you inside this repo and asks to
-"set up / install claude-vault" (or similar), self-configure their machine by following the
+"set up / install memvault" (or similar), self-configure their machine by following the
 steps below. Do it **interactively and carefully** — you are editing their environment.
 
-## What claude-vault does (say this to the user first)
+## What memvault does (say this to the user first)
 
 A 3-tier storage policy with automatic backup:
 - **Tier 1** `~/dev/` — code, git repos only (private, pushed).
@@ -28,7 +28,7 @@ cloud — a plain `launchd`/`cron` job cannot (macOS TCC). See `docs/architectur
    `PostToolUse` hooks into `~/.claude/settings.json` (preserving existing hooks), installs the
    launchd watchdog, appends the policy to `~/.claude/CLAUDE.md`, and does a first backup.
 5. **Verify:** `settings.json` still valid JSON; the three hooks present; the watchdog loaded
-   (`launchctl list | grep claude-vault`); the vault has `memory/` + `CLAUDE.md`.
+   (`launchctl list | grep memvault`); the vault has `memory/` + `CLAUDE.md`.
 6. **Tell the user** to mark `VAULT_DIR` "Available offline" in their cloud client, and — if on
    Google Drive/Synology — that Cloud Sync will replicate it to the NAS.
 

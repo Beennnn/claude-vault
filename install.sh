@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-vault — installer. Idempotent: safe to re-run.
+# memvault — installer. Idempotent: safe to re-run.
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 
@@ -13,8 +13,8 @@ fi
 source "$here/config.sh"
 : "${CLAUDE_DIR:?}" "${DEV_ROOT:?}" "${VAULT_DIR:?}"
 
-SHARE="$HOME/.local/share/claude-vault"
-CONFIG_DST="$HOME/.config/claude-vault/config.sh"
+SHARE="$HOME/.local/share/memvault"
+CONFIG_DST="$HOME/.config/memvault/config.sh"
 SETTINGS="$CLAUDE_DIR/settings.json"
 
 echo "→ installing scripts to $SHARE/bin"
@@ -54,14 +54,14 @@ PY
 
 # --- 3. launchd watchdog -------------------------------------------------------------------
 echo "→ installing launchd watchdog (every 3h + at login)"
-PLIST="$HOME/Library/LaunchAgents/com.claude-vault.watchdog.plist"
+PLIST="$HOME/Library/LaunchAgents/com.memvault.watchdog.plist"
 sed -e "s|__VAULT_BIN__|$SHARE/bin|g" -e "s|__VAULT_CONFIG__|$CONFIG_DST|g" \
-    "$here/launchd/com.claude-vault.watchdog.plist.template" > "$PLIST"
+    "$here/launchd/com.memvault.watchdog.plist.template" > "$PLIST"
 launchctl unload "$PLIST" 2>/dev/null || true
 launchctl load "$PLIST"
 
 # --- 4. policy in CLAUDE.md ----------------------------------------------------------------
-if ! grep -q "claude-vault policy" "$CLAUDE_DIR/CLAUDE.md" 2>/dev/null; then
+if ! grep -q "memvault policy" "$CLAUDE_DIR/CLAUDE.md" 2>/dev/null; then
   echo "→ appending policy to $CLAUDE_DIR/CLAUDE.md"
   printf '\n' >> "$CLAUDE_DIR/CLAUDE.md"
   cat "$here/CLAUDE.md.snippet" >> "$CLAUDE_DIR/CLAUDE.md"
@@ -71,12 +71,12 @@ fi
 CLAUDE_VAULT_CONFIG="$CONFIG_DST" bash "$SHARE/bin/backup-durable.sh" || true
 cat <<EOF
 
-✅ claude-vault installed.
+✅ memvault installed.
    Tier 1 (code)     : $DEV_ROOT        → git repos, pushed
    Tier 2 (vault)    : $VAULT_DIR       → cloud-synced, off-machine
    Tier 3 (local)    : $CLAUDE_DIR      → disposable; memories+CLAUDE.md backed up to vault
    Hooks             : Stop (on-the-fly backup) + SessionStart (catch-up + relocate)
-   Watchdog          : com.claude-vault.watchdog (launchd, 3h + login)
+   Watchdog          : com.memvault.watchdog (launchd, 3h + login)
 
 Tip (Google Drive/iCloud): mark $VAULT_DIR "Available offline" so it is never evicted.
 EOF

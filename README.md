@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="claude-vault" width="100%">
+  <img src="docs/banner.svg" alt="memvault" width="100%">
 </p>
 
 <p align="center">
@@ -9,129 +9,90 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
 </p>
 
-<p align="center">
-  <b>Never lose your Claude Code work again.</b><br>
-  A 3-tier storage policy + automatic backup: code in git, everything else in a cloud vault
-  (→ your NAS), and nothing important stranded on a disk that can die.
-</p>
+<p align="center"><b>Never lose your Claude Code work — memories, rules, and code, backed up automatically.</b></p>
 
 ---
 
-## The problem
+## What problem it solves
 
-Claude Code silently accumulates valuable state you never think to back up:
+Claude Code quietly builds up things you'd hate to lose:
 
-- **Memories** (`~/.claude/projects/*/memory/`) — the durable knowledge Claude builds over months.
-- A growing **global `CLAUDE.md`** — your rules, conventions, hard-won context.
-- **Generated files** scattered wherever the session happened to write them.
-- **Code** across many repos — some with uncommitted or **unpushed** work.
+- its **memories** (`~/.claude/projects/*/memory/`) — knowledge it accumulates over months,
+- your growing **`CLAUDE.md`** — your rules and hard-won context,
+- **files it generates**, and **code** spread across many repos.
 
-None of it is backed up by default. A disk failure, a bad automated edit, or a forgotten
-unpushed branch = **lost work**.
+**By default none of it is backed up.** One disk failure, one bad edit, or one forgotten
+unpushed branch = lost work. **memvault makes that impossible**, without you thinking about it:
 
-## The idea — 3 tiers, one rule each
+- **Code** → stays in **git** (private repos, pushed).
+- **Everything else durable** (memories, notes, generated files) → mirrored to your **cloud
+  drive**, and on to your **NAS**.
+- A quiet **watchdog** warns you the moment code isn't pushed or something lands in the wrong place.
+
+## Where it runs
+
+- **Claude Code**, any project.
+- **macOS** (the clever bit below is macOS-specific; it also runs on Linux, even more simply).
+- **Any cloud drive** that syncs a local folder — Google Drive, iCloud, Dropbox, or an rclone
+  mount. If your cloud mirrors to a **NAS** (e.g. Synology Cloud Sync), your work lands on your
+  own hardware too.
+
+## Install
+
+```bash
+git clone https://github.com/Beennnn/memvault.git && cd memvault
+cp config.example.sh config.sh      # set your cloud folder (VAULT_DIR)
+./install.sh                        # idempotent — safe to re-run
+```
+
+Or just open Claude Code in the repo and say **“set up memvault for me”** — it reads its own
+[`CLAUDE.md`](CLAUDE.md) and installs itself.
+
+---
+
+## How it works (in detail)
+
+Everything you touch is sorted into **3 tiers**, each with one backup path:
 
 <p align="center"><img src="docs/diagram.svg" alt="3-tier architecture" width="90%"></p>
 
 | Tier | What | Where | Backup |
 |---|---|---|---|
 | **1** | **Code** | `~/dev/` — git repos only, private, pushed | the git remote |
-| **2** | **Everything durable non-code** | a **cloud vault** (Drive/iCloud/Dropbox) | cloud → your NAS |
+| **2** | **Everything durable non-code** | your **cloud vault** | cloud → NAS |
 | **3** | **The rest** (transcripts, cache…) | `~/.claude/` — disposable | none needed |
 
-Memories and `CLAUDE.md` *have* to live in tier 3 (Claude Code reads them there) but are
-**durable** — so they stay local **and** are mirrored to the vault automatically.
+Memories and `CLAUDE.md` *must* live in tier 3 (Claude reads them there) but are durable — so
+they stay local **and** are mirrored to the vault. That mirroring runs from **Claude Code hooks**:
 
-## The hard part — and the insight 💡
+| When | Hook | Does |
+|---|---|---|
+| The instant a memory is written | `PostToolUse` | mirror it now — a long response never waits |
+| After every response | `Stop` | on-the-fly backup |
+| At session start | `SessionStart` | catch-up + relocate any stray non-git out of `~/dev` |
+| Between sessions | `launchd` watchdog | passively flag unpushed repos / stray files (notification) |
 
-On macOS, **TCC** (the privacy system) blocks background jobs (`launchd`, `cron`) from writing
-to a cloud folder like Google Drive or iCloud:
+Nothing is ever deleted — relocated files go to `vault/_relocated/` (quarantine).
+
+## The catch — and how memvault beats it
+
+The obvious way to back up to your Drive is a scheduled job (`cron`/`launchd`). **On macOS it
+doesn't work:** the privacy system (**TCC**) blocks background jobs from writing to cloud
+folders —
 
 ```
 rsync: … /Google Drive/…: open: Operation not permitted
 ```
 
-So a scheduled backup to your Drive **cannot work** — unless you grant *Full Disk Access* to
-`/bin/bash` (broad and dangerous) or ship a signed helper app (heavy).
+— unless you grant **Full Disk Access** to `/bin/bash`, which hands *every* shell script on your
+machine access to all your private data. Bad trade.
 
-**claude-vault's trick: run the backup from a Claude Code hook.** A hook runs *inside* the
-Claude Code process, which already holds Full Disk Access — so it can write the vault with **no
-extra permission and no new attack surface**. Backups happen **on the fly** after every
-response, and a catch-up runs at session start.
+**memvault's trick:** do the backup from a **Claude Code hook**. A hook runs *inside* Claude
+Code, which already has Full Disk Access — so it can write the vault with **no new permission and
+no new risk**. The launchd watchdog stays permission-less on purpose: it only reads local git
+state and *flags*; the hooks do the writing.
 
-## How it works
-
-| When | Mechanism | Does |
-|---|---|---|
-| On **every memory write** (mid-response) | `PostToolUse` hook → `backup-on-write.sh` | mirrors the file the instant it changes — a long response never waits for `Stop` |
-| After **every response** | `Stop` hook → `backup-durable.sh` | copies memories + `CLAUDE.md` → vault (on-the-fly) |
-| At **session start** | `SessionStart` hook → `relocate.sh` | catch-up backup **+** relocates stray non-git out of `~/dev` **+** flags unpushed repos |
-| **Between sessions** | `launchd` watchdog → `watchdog.sh` | passively flags unpushed repos / non-git in `~/dev` (desktop notification) |
-| **Continuously** | your cloud client (Cloud Sync…) | replicates the vault to your NAS |
-
-Hooks run with Claude Code's FDA (they *can* write the cloud). The watchdog runs headless via
-launchd (it *cannot* — TCC), so it only **flags**; the hooks do the actual fixing.
-
-## Let Claude set it up for you 🤖
-
-This repo ships a root [`CLAUDE.md`](CLAUDE.md) that teaches Claude Code how to install itself.
-Just:
-
-```bash
-git clone https://github.com/Beennnn/claude-vault.git && cd claude-vault
-claude   # then say: "set up claude-vault for me"
-```
-
-Claude reads `CLAUDE.md`, detects your cloud drive, writes `config.sh`, runs `./install.sh`,
-and verifies — interactively.
-
-## Install (manual)
-
-```bash
-git clone https://github.com/Beennnn/claude-vault.git
-cd claude-vault
-cp config.example.sh config.sh      # ← edit DEV_ROOT + VAULT_DIR for your machine
-./install.sh                        # idempotent; re-run any time
-```
-
-`install.sh` copies the scripts, wires the three hooks (`PostToolUse` + `Stop` +
-`SessionStart`) into `~/.claude/settings.json` **without touching your existing hooks**,
-installs the launchd watchdog, and appends the policy to your `~/.claude/CLAUDE.md`.
-
-## Configuring `~/.claude/CLAUDE.md`
-
-The policy Claude must follow lives in your **global** `~/.claude/CLAUDE.md`. `install.sh`
-appends the block from [`CLAUDE.md.snippet`](CLAUDE.md.snippet) (once — it checks first). That
-block states the 3-tier rule so **every** Claude session obeys it: code → git under `~/dev`,
-durable non-code → the vault, nothing important loose in `~`. Edit the snippet before install
-if you want to tune the wording; re-running install won't duplicate it.
-
-## Configure your vault (any cloud)
-
-`VAULT_DIR` just needs to be a folder inside a synced cloud drive:
-
-```bash
-# Google Drive
-VAULT_DIR="$HOME/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/claude"
-# iCloud Drive
-VAULT_DIR="$HOME/Library/Mobile Documents/com~apple~CloudDocs/claude"
-# Dropbox
-VAULT_DIR="$HOME/Dropbox/claude"
-```
-
-> **Tip:** mark the vault **"Available offline"** in your cloud client so it is never evicted
-> to online-only.
-
-## What it touches
-
-- `~/.local/share/claude-vault/bin/` — the three scripts
-- `~/.config/claude-vault/config.sh` — your paths
-- `~/.claude/settings.json` — adds `Stop` + `SessionStart` hooks (existing hooks preserved)
-- `~/Library/LaunchAgents/com.claude-vault.watchdog.plist` — the watchdog
-- appends a policy block to `~/.claude/CLAUDE.md`
-
-Nothing is deleted; relocations go to `vault/_relocated/` (quarantine). See
-[`docs/architecture.md`](docs/architecture.md) for the full design and the TCC/FDA deep-dive.
+Full design + the TCC/FDA deep-dive: [`docs/architecture.md`](docs/architecture.md).
 
 ## License
 

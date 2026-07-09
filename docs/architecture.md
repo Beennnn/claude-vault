@@ -18,7 +18,7 @@ natural home:
 
 The awkward case: **memories** (`~/.claude/projects/*/memory/`) and the global **`CLAUDE.md`**
 are *durable* but *must physically live in tier 3* because Claude Code reads them from fixed
-paths. claude-vault keeps them local (so the editor tools work — see below) and **mirrors**
+paths. memvault keeps them local (so the editor tools work — see below) and **mirrors**
 them into the vault.
 
 ## Why not symlink the memories into the vault?
@@ -45,12 +45,12 @@ has **Full Disk Access (FDA)**.
   `Operation not permitted`. And FDA is **per-executable**: granting it to `/bin/bash` gives it
   to *every* shell script on the machine (broad, risky).
 
-**claude-vault's resolution:** do the cloud writes from **Claude Code hooks**, which execute
+**memvault's resolution:** do the cloud writes from **Claude Code hooks**, which execute
 inside the Claude Code process and therefore **inherit its FDA** — no new grant, no risk. The
 launchd watchdog stays FDA-less on purpose: it only reads local git state and *flags*; it never
 touches the cloud.
 
-| Actor | Has FDA? | Can write the vault? | Role in claude-vault |
+| Actor | Has FDA? | Can write the vault? | Role in memvault |
 |---|---|---|---|
 | Claude Code session (hooks) | yes (inherited) | ✅ | backup + relocate |
 | launchd watchdog | no | ❌ | flag only |

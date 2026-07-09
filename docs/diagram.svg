@@ -4,7 +4,7 @@
     <marker id="arrG" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#22c55e"/></marker>
   </defs>
   <rect width="1000" height="560" rx="16" fill="#f6f7fb"/>
-  <text x="500" y="42" font-size="24" font-weight="800" fill="#1b1233" text-anchor="middle">claude-vault — 3 tiers, automatic backup</text>
+  <text x="500" y="42" font-size="24" font-weight="800" fill="#1b1233" text-anchor="middle">memvault — 3 tiers, automatic backup</text>
 
   <!-- Claude Code session -->
   <rect x="360" y="70" width="280" height="66" rx="12" fill="#8b5cf6"/>

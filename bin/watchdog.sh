@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-vault — passive policy watchdog (runs via launchd, BETWEEN sessions).
+# memvault — passive policy watchdog (runs via launchd, BETWEEN sessions).
 #
 # Unlike the hooks, launchd has NO Full Disk Access → it cannot read/write the cloud vault
 # (TCC). So this watchdog only checks what is verifiable LOCALLY and NON-cloud:
@@ -7,8 +7,8 @@
 #   - no non-git content is sitting in DEV_ROOT.
 # On a violation it fires a desktop notification + logs. The actual fixing (relocation, cloud
 # backup) is done by the hooks, which run with Claude Code's FDA.
-source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/claude-vault/config.sh}"
-LOG="$CLAUDE_DIR/claude-vault-watchdog.log"
+source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
+LOG="$CLAUDE_DIR/memvault-watchdog.log"
 issues=()
 
 # Repos: committed + pushed (HEAD reachable from a remote → backed up)
@@ -35,6 +35,6 @@ if [ ${#issues[@]} -eq 0 ]; then
 else
   echo "[$ts] ⚠ ${#issues[@]} violation(s):" >> "$LOG"
   printf '  - %s\n' "${issues[@]}" >> "$LOG"
-  command -v osascript >/dev/null && osascript -e "display notification \"${issues[*]}\" with title \"⚠ claude-vault watchdog\" sound name \"Basso\"" 2>/dev/null || true
+  command -v osascript >/dev/null && osascript -e "display notification \"${issues[*]}\" with title \"⚠ memvault watchdog\" sound name \"Basso\"" 2>/dev/null || true
 fi
 exit 0

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-vault — session-start relocator + catch-up backup.
+# memvault — session-start relocator + catch-up backup.
 #
 # Wired to the Claude Code `SessionStart` hook (inherits Full Disk Access). It:
 #   1. backs up durable local state (memories + CLAUDE.md) to the vault — catches anything a
@@ -8,8 +8,8 @@
 #      (quarantine, never deleted) so tier 1 stays "git repos only";
 #   3. flags repos that are not committed / not pushed (backup gap) — never auto-pushes
 #      (that is a human judgement call).
-source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/claude-vault/config.sh}"
-LOG="$CLAUDE_DIR/claude-vault.log"
+source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
+LOG="$CLAUDE_DIR/memvault.log"
 stamp="$(date '+%Y-%m-%d %H:%M:%S')"
 
 {
@@ -28,7 +28,7 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
   # 2. Relocate stray non-git out of DEV_ROOT (files that sit OUTSIDE any repo)
   for root in "$DEV_ROOT" ${EXTRA_DEV_ROOTS:-}; do
     [ -d "$root" ] || continue
-    stray="$(find "$root" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -print 2>/dev/null \
+    stray="$(find "$root" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -mmin +5 -print 2>/dev/null \
       | grep -vx "$root/CLAUDE.md" || true)"
     if [ -n "$stray" ]; then
       quar="$VAULT_DIR/_relocated/$(date +%Y%m%d-%H%M)"
@@ -37,7 +37,7 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
         mkdir -p "$quar/$(dirname "$rel")"
         mv "$f" "$quar/$rel" && echo "  [2] RELOCATED $(basename "$root")/$rel → _relocated/"
       done
-      command -v osascript >/dev/null && osascript -e "display notification \"Non-git files relocated from $(basename "$root") to the vault\" with title \"claude-vault\"" 2>/dev/null || true
+      command -v osascript >/dev/null && osascript -e "display notification \"Non-git files relocated from $(basename "$root") to the vault\" with title \"memvault\"" 2>/dev/null || true
     fi
   done
 

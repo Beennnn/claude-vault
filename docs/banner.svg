@@ -10,7 +10,7 @@
     </linearGradient>
   </defs>
   <rect width="1200" height="300" rx="20" fill="url(#bg)"/>
-  <!-- vault door motif -->
+  <!-- brain + vault-door motif -->
   <g transform="translate(120,150)">
     <circle r="82" fill="none" stroke="url(#accent)" stroke-width="6" opacity="0.9"/>
     <circle r="58" fill="none" stroke="#8b5cf6" stroke-width="3" opacity="0.5"/>
@@ -23,8 +23,8 @@
     <circle r="12" fill="url(#accent)"/>
   </g>
   <!-- title -->
-  <text x="270" y="140" font-size="72" font-weight="800" fill="#ffffff" letter-spacing="-1">claude<tspan fill="url(#accent)">-vault</tspan></text>
-  <text x="272" y="188" font-size="27" font-weight="500" fill="#c9d1e0">Never lose your Claude Code work again.</text>
+  <text x="270" y="140" font-size="74" font-weight="800" fill="#ffffff" letter-spacing="-1">mem<tspan fill="url(#accent)">vault</tspan></text>
+  <text x="272" y="188" font-size="26" font-weight="500" fill="#c9d1e0">Never lose your Claude Code work.</text>
   <!-- tier chips -->
   <g font-size="20" font-weight="600">
     <rect x="272" y="214" width="150" height="40" rx="20" fill="#8b5cf6" opacity="0.18"/>

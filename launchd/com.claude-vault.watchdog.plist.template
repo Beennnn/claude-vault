@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- claude-vault watchdog — install.sh renders __VAULT_BIN__ and drops this in ~/Library/LaunchAgents/ -->
+<!-- memvault watchdog — install.sh renders __VAULT_BIN__ and drops this in ~/Library/LaunchAgents/ -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.claude-vault.watchdog</string>
+    <string>com.memvault.watchdog</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
