@@ -69,10 +69,14 @@ they stay local **and** are mirrored to the vault. That mirroring runs from **Cl
 |---|---|---|
 | The instant a memory is written | `PostToolUse` | mirror it now — a long response never waits |
 | After every response | `Stop` | on-the-fly backup |
-| At session start | `SessionStart` | catch-up + relocate any stray non-git out of `~/dev` |
+| At session start | `SessionStart` | catch-up + **mirror your repo hierarchy into the vault** + move any stray non-git into its matching group folder |
 | Between sessions | `launchd` watchdog | passively flag unpushed repos / stray files (notification) |
 
-Nothing is ever deleted — relocated files go to `vault/_relocated/` (quarantine).
+**The vault mirrors your code tree.** memvault keeps the vault's top-level structure in step with
+`~/dev` (same groups — `music/`, `work/`, …). A non-git file that drifts into `~/dev/music/` is
+moved to `vault/music/`, so your durable files are organized exactly like your repos, and both
+sides evolve together. Files loose at the `~/dev` root (no group) go to `vault/_relocated/`.
+Nothing is ever deleted.
 
 ## The catch — and how memvault beats it
 

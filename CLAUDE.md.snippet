@@ -8,7 +8,9 @@ Where you (Claude) MUST write, by nature of the file — respect on EVERY write:
   level. Backup = push to the remote.
 - **Tier 2 — `<VAULT_DIR>` = everything durable non-code** you produce (notes, exports, working
   files). It is a cloud-synced folder → replicated off-machine automatically. Write durable
-  non-code HERE, never at `~` or inside `~/dev`.
+  non-code HERE, never at `~` or inside `~/dev`. Its structure **mirrors `~/dev`'s groups**
+  (a music note → `<VAULT_DIR>/music/`), so files are organized like the repos; both sides
+  evolve in parallel (the `SessionStart` hook keeps the mirror in step).
 - **Tier 3 — `~/.claude/` = disposable/regenerable.** Memories + this `CLAUDE.md` live here
   (Claude Code reads them here) and stay LOCAL, but are backed up to the vault automatically:
   a `Stop` hook copies them after every response, a `SessionStart` hook catches up + relocates
