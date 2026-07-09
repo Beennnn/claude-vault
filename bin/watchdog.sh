@@ -11,6 +11,10 @@ source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 LOG="$CLAUDE_DIR/memvault-watchdog.log"
 issues=()
 
+# Auto-push first (no-op unless AUTO_PUSH=true) so the checks below reflect the post-push state.
+# git push is network-only → works from launchd (no FDA needed).
+bash "$(dirname "$0")/push-repos.sh" 2>/dev/null || true
+
 # Repos: committed + pushed (HEAD reachable from a remote → backed up)
 while IFS= read -r r; do
   ( cd "$r" 2>/dev/null || exit 0 )

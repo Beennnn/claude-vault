@@ -62,4 +62,7 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
 } >> "$LOG" 2>&1
 command -v osascript >/dev/null && grep -q "RELOCATED" <(tail -20 "$LOG") && \
   osascript -e "display notification \"Non-git files relocated into the vault (mirrored)\" with title \"memvault\"" 2>/dev/null || true
+
+# Auto-push committed work + snapshot WIP to refs/backup (no-op unless AUTO_PUSH=true)
+bash "$(dirname "$0")/push-repos.sh" 2>/dev/null || true
 exit 0

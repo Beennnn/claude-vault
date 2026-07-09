@@ -112,6 +112,23 @@ What the survey treats as "not user data" comes from two community lists —
 [`rules/ignore-dirs.txt`](rules/ignore-dirs.txt) and
 [`rules/ignore-paths.txt`](rules/ignore-paths.txt) — that anyone can extend by PR.
 
+## Optional: auto-push (nothing local stays un-backed)
+
+Set `AUTO_PUSH=true` and the watchdog + relocator push your repos automatically (`git push` is
+network-only, so it works from launchd):
+
+- **committed** work on a non-protected branch → `origin/<branch>` (main/master are skipped, to
+  honour "never push to main directly");
+- **uncommitted** work (tracked + untracked) → snapshotted to **`refs/backup/<branch>`** *without
+  touching your working tree* — a custom ref, so **no CI is triggered and no branch clutters your
+  repo**, yet it's fully recoverable:
+  ```bash
+  git fetch origin 'refs/backup/*:refs/backup/*'
+  git log refs/backup/<branch>    # inspect / checkout / cherry-pick
+  ```
+
+Set `GIT_SSH_KEY` to your key so launchd (which has no ssh-agent) can push over SSH.
+
 ## Contributing
 
 memvault gets smarter as people feed back the special cases they hit on real machines — usually a

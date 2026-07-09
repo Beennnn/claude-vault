@@ -32,3 +32,13 @@ SURVEY_ROOTS=""
 BACKED_UP_ZONES="$DEV_ROOT $VAULT_DIR $HOME/Library/CloudStorage"
 # Directory NAMES to skip entirely (heavy / regenerable / not user data):
 SURVEY_IGNORE_NAMES="Library node_modules .git .Trash .cache .npm .cargo .rustup .gradle .venv venv __pycache__ Applications Parallels"
+
+# --- Optional: auto-push (opt-in) -----------------------------------------------------------
+# When true, the watchdog + SessionStart relocator push repos so nothing local stays un-backed:
+#   • committed work on a NON-protected branch → origin/<branch> (main/master are skipped);
+#   • uncommitted work (tracked+untracked)     → refs/backup/<branch> (no CI trigger, no branch
+#     clutter, working tree untouched). Recover with:
+#       git fetch origin 'refs/backup/*:refs/backup/*' ; git log refs/backup/<branch>
+AUTO_PUSH=false
+# SSH key for pushes from launchd (it has no ssh-agent). Empty = git's default credential flow.
+GIT_SSH_KEY=""
