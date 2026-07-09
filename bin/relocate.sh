@@ -2,13 +2,13 @@
 # memvault — session-start relocator + catch-up backup.
 #
 # Wired to the Claude Code `SessionStart` hook (inherits Full Disk Access). It:
-#   1. backs up durable local state (memories + CLAUDE.md) to the vault;
-#   2. MIRRORS the git-repo hierarchy of DEV_ROOT into the vault (same top-level groups), and
-#      RELOCATES any non-git file that drifted into DEV_ROOT to the MATCHING group folder in the
-#      vault — so the vault stays organized exactly like your code tree. Loose files at the
-#      DEV_ROOT root (no group) go to vault/_relocated/<date> (quarantine). Nothing is deleted.
-#      Files modified in the last 5 min are skipped (don't grab a concurrent session's work).
-#   3. flags repos that are not committed / not pushed (backup gap) — never auto-pushes.
+#   1. backs up durable local state (memories → vault/projects/<name>/memory/, + CLAUDE.md) by
+#      delegating to backup-durable.sh (single source of the vault layout + name mapping);
+#   2. QUARANTINES any non-git file that drifted into DEV_ROOT → vault/_relocated/<date>/ —
+#      DEV_ROOT is meant to hold git repos ONLY, so a stray non-git file there is a policy
+#      violation, not something to mirror. Nothing is deleted. Files touched in the last 5 min
+#      are skipped (don't grab a concurrent session's work); dotdirs + CLAUDE.md are ignored.
+#   3. flags repos that are not committed / not pushed (backup gap).
 source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 LOG="$CLAUDE_DIR/memvault.log"
 stamp="$(date '+%Y-%m-%d %H:%M:%S')"
@@ -16,34 +16,16 @@ stamp="$(date '+%Y-%m-%d %H:%M:%S')"
 {
   echo "=== $stamp relocate/backup ==="
 
-  # 1. Catch-up backup of durables
-  mkdir -p "$VAULT_DIR/memory"
-  for mem in "$CLAUDE_DIR"/projects/*/memory; do
-    [ -d "$mem" ] || continue
-    proj="$(basename "$(dirname "$mem")")"
-    rsync -a --exclude '.DS_Store' "$mem/" "$VAULT_DIR/memory/$proj/"
-  done
-  [ -f "$CLAUDE_DIR/CLAUDE.md" ] && cp "$CLAUDE_DIR/CLAUDE.md" "$VAULT_DIR/CLAUDE.md"
-  echo "  [1] durables backed up → vault"
+  # 1. Catch-up backup of durables (memories + CLAUDE.md) — delegated to backup-durable.sh
+  bash "$(dirname "$0")/backup-durable.sh" && echo "  [1] durables backed up → vault/projects/<name>/memory"
 
-  # 2. Mirror the repo hierarchy + relocate stray non-git into the MATCHING group folder
+  # 2. Quarantine stray non-git files that drifted into DEV_ROOT (git-only zone)
   for root in "$DEV_ROOT" ${EXTRA_DEV_ROOTS:-}; do
     [ -d "$root" ] || continue
-    # 2a. mirror DEV_ROOT's top-level groups as vault folders (parallel structure)
-    for g in "$root"/*/; do
-      [ -d "$g" ] || continue
-      mkdir -p "$VAULT_DIR/$(basename "$g")"
-    done
-    # 2b. relocate stray files (outside any repo), preserving their group path
     find "$root" -type d -exec test -e '{}/.git' ';' -prune -o -type f ! -name '.DS_Store' -mmin +5 -print 2>/dev/null \
       | grep -vx "$root/CLAUDE.md" | grep -v "/\\.[^/]*/" | while IFS= read -r f; do
         rel="${f#"$root"/}"
-        grp="${rel%%/*}"
-        if [ "$grp" != "$rel" ] && [ -d "$root/$grp" ]; then
-          dest="$VAULT_DIR/$rel"                                  # ~/dev/<group>/x → vault/<group>/x
-        else
-          dest="$VAULT_DIR/_relocated/$(date +%Y%m%d-%H%M)/$rel"  # loose at dev root → quarantine
-        fi
+        dest="$VAULT_DIR/_relocated/$(date +%Y%m%d-%H%M)/$rel"    # git-only zone → quarantine
         mkdir -p "$(dirname "$dest")"
         mv "$f" "$dest" && echo "  [2] RELOCATED $(basename "$root")/$rel → ${dest#"$VAULT_DIR"/}"
       done
