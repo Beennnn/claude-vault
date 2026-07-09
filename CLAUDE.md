@@ -4,6 +4,21 @@
 "set up / install memvault" (or similar), self-configure their machine by following the
 steps below. Do it **interactively and carefully** — you are editing their environment.
 
+## ⛔ Source of truth — NEVER edit the installed copies
+
+The scripts that actually run (`~/.local/share/memvault/bin/`) are **build output** deployed by
+`install.sh`. The **only** source of truth is **this repo** (`bin/`, `rules/`, `install.sh`).
+
+**Every change follows this order — no exceptions:**
+1. Edit the file **in the repo** (`~/dev/claude/memvault/…`).
+2. `git commit` + `git push` (the change is now versioned + backed up).
+3. Re-run **`./install.sh`** to deploy (idempotent) — this refreshes the installed copies.
+
+Never edit `~/.local/share/memvault/bin/*`, `~/.config/memvault/config.sh` (except the user's own
+paths), or the wired hooks by hand — an install.sh re-run would silently overwrite it, and the
+change would never reach the repo (so it's lost + un-shared). If you catch yourself editing an
+installed script, stop and move the edit to the repo instead.
+
 ## What memvault does (say this to the user first)
 
 A 3-tier storage policy with automatic backup:
