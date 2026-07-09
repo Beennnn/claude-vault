@@ -28,6 +28,12 @@ EXTRA_DEV_ROOTS=""
 # their files. Example: a personal-life project launched from ~/dev/perso → DEV_ANCHOR_DIRS="perso"
 DEV_ANCHOR_DIRS=""
 
+# --- Optional: vault nesting (space-separated child:parent pairs) ---
+# Nest a project's vault folder UNDER another in the backup, to express a hierarchy while both
+# stay separate Claude projects on disk. Ex: PROJECT_NESTING="iris:pro" → iris backs up to
+# projects/pro/iris/ instead of projects/iris/ (a general 'pro' project containing active 'iris').
+PROJECT_NESTING=""
+
 # --- Optional: disk survey ------------------------------------------------------------------
 # Find durable local files that are NOT in any backed-up zone, so Claude can ask you (at
 # session start) how to protect them. Leave SURVEY_ROOTS empty to disable.
