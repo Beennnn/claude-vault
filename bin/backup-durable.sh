@@ -15,15 +15,22 @@ source "${CLAUDE_VAULT_CONFIG:-$HOME/.config/memvault/config.sh}"
 #   -<home>-perso               → perso
 #   -<home>-dev                 → _general (the catch-all, drained over time)
 vault_name() {
-  local key="$1" home_prefix rel
+  local key="$1" home_prefix rel name pair
   home_prefix="${HOME//\//-}"          # /Users/benoitbesson → -Users-benoitbesson
   rel="${key#"$home_prefix"}"; rel="${rel#-}"
   case "$rel" in
-    dev)   echo "_general" ;;
-    dev-*) rel="${rel#dev-}"; echo "${rel%%-*}" ;;
-    "")    echo "_home" ;;
-    *)     echo "${rel%%-*}" ;;
+    dev)   name="_general" ;;
+    dev-*) rel="${rel#dev-}"; name="${rel%%-*}" ;;
+    "")    name="_home" ;;
+    *)     name="${rel%%-*}" ;;
   esac
+  # Declared nesting (PROJECT_NESTING="child:parent …"): a child project's vault dir nests under
+  # its parent → projects/<parent>/<child>/. Lets a general project (e.g. 'pro') contain an active
+  # sub-project (e.g. 'iris') while iris stays its own Claude project on disk.
+  for pair in ${PROJECT_NESTING:-}; do
+    [ "${pair%%:*}" = "$name" ] && { echo "${pair#*:}/$name"; return; }
+  done
+  echo "$name"
 }
 
 # Memories: ~/.claude/projects/<key>/memory  →  vault/projects/<name>/memory/
