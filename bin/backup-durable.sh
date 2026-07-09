@@ -34,17 +34,22 @@ vault_name() {
 }
 
 # Memories: ~/.claude/projects/<key>/memory  →  vault/projects/<name>/memory/
-# Skip tombstone-only dirs (frozen/migrated projects whose only .md is MEMORY.md).
 for mem in "$CLAUDE_DIR"/projects/*/memory; do
   [ -d "$mem" ] || continue
-  [ "$(find "$mem" -maxdepth 1 -name '*.md' ! -name MEMORY.md 2>/dev/null | head -1)" ] || continue
   name="$(vault_name "$(basename "$(dirname "$mem")")")"
-  mkdir -p "$VAULT_DIR/projects/$name/memory" 2>/dev/null || true
-  # --delete: the vault memory dir is a PURE MIRROR of the source memory dir, so a memory the
-  # user deletes/moves must disappear from the vault too. Without it, rsync is additive-only and
-  # stale copies pile up forever (a deleted memory silently survives in the backup). Safe here
-  # because nothing but the source's own .md files is ever expected under vault/.../memory/.
-  rsync -a --delete --exclude '.DS_Store' "$mem/" "$VAULT_DIR/projects/$name/memory/" 2>/dev/null || true
+  vault_mem="$VAULT_DIR/projects/$name/memory"
+  has_real="$(find "$mem" -maxdepth 1 -name '*.md' ! -name MEMORY.md 2>/dev/null | head -1)"
+  # Tombstone source (only MEMORY.md, e.g. a frozen/migrated project or one fully drained of its
+  # memories): don't CREATE a vault dir for a project that never had any — but if a vault dir
+  # ALREADY exists (the project was drained after the fact), still sync so --delete drains the
+  # now-stale copies from the vault too. Skip only when there's nothing real AND no vault dir yet.
+  [ -n "$has_real" ] || [ -d "$vault_mem" ] || continue
+  mkdir -p "$vault_mem" 2>/dev/null || true
+  # --delete: the vault memory dir is a PURE MIRROR of the source, so a memory the user
+  # deletes/moves (or drains entirely) must disappear from the vault too. Without it, rsync is
+  # additive-only and stale copies pile up forever. Safe: nothing but the source's own .md is
+  # ever expected under vault/.../memory/.
+  rsync -a --delete --exclude '.DS_Store' "$mem/" "$vault_mem/" 2>/dev/null || true
 done
 
 # Global instructions
