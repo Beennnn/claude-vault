@@ -40,7 +40,11 @@ for mem in "$CLAUDE_DIR"/projects/*/memory; do
   [ "$(find "$mem" -maxdepth 1 -name '*.md' ! -name MEMORY.md 2>/dev/null | head -1)" ] || continue
   name="$(vault_name "$(basename "$(dirname "$mem")")")"
   mkdir -p "$VAULT_DIR/projects/$name/memory" 2>/dev/null || true
-  rsync -a --exclude '.DS_Store' "$mem/" "$VAULT_DIR/projects/$name/memory/" 2>/dev/null || true
+  # --delete: the vault memory dir is a PURE MIRROR of the source memory dir, so a memory the
+  # user deletes/moves must disappear from the vault too. Without it, rsync is additive-only and
+  # stale copies pile up forever (a deleted memory silently survives in the backup). Safe here
+  # because nothing but the source's own .md files is ever expected under vault/.../memory/.
+  rsync -a --delete --exclude '.DS_Store' "$mem/" "$VAULT_DIR/projects/$name/memory/" 2>/dev/null || true
 done
 
 # Global instructions
@@ -59,5 +63,35 @@ for a in ${DEV_ANCHOR_DIRS:-}; do
   # (e.g. a symlink to a real repo) back themselves up and are skipped by -type f.
   find "$DEV_ROOT/$a" -maxdepth 1 -type f ! -name '.DS_Store' -exec cp {} "$VAULT_DIR/projects/$name/" \; 2>/dev/null || true
 done
+
+# ── Coverage self-check — the systematic guard against "falls through the cracks" holes ───────
+# Every cp/rsync above is best-effort (|| true) so a cloud-folder hiccup or TCC denial never
+# blocks an assistant response. The flip side: a failure is SILENT. This block re-asserts that
+# every durable we own actually reached the vault, printing a ⚠ UNBACKED line for any miss. That
+# output is captured by relocate.sh into memvault.log, so a gap surfaces at the next SessionStart
+# instead of being discovered only after a disk failure. The invariant it enforces: anything the
+# relocator leaves in DEV_ROOT (its exemptions: DEV_ROOT/CLAUDE.md + DEV_ANCHOR_DIRS) is backed up.
+missing=0
+_assert() {                       # <local-src> <vault-dst that must exist>
+  [ -e "$1" ] || return 0         # nothing to back up → not a gap
+  [ -e "$2" ] && return 0
+  echo "  ⚠ UNBACKED: ${1/#$HOME/\~} (expected ${2/#$HOME/\~})"; missing=1
+}
+_assert "$DEV_ROOT/CLAUDE.md" "$VAULT_DIR/dev-CLAUDE.md"
+for a in ${DEV_ANCHOR_DIRS:-}; do
+  [ -d "$DEV_ROOT/$a" ] || continue
+  name="$(vault_name "${DEV_ROOT//\//-}-$a")"
+  while IFS= read -r f; do _assert "$f" "$VAULT_DIR/projects/$name/$(basename "$f")"; done \
+    < <(find "$DEV_ROOT/$a" -maxdepth 1 -type f ! -name '.DS_Store' 2>/dev/null)
+done
+# Memories: any source dir holding a real memory (.md ≠ MEMORY.md) must have a non-empty mirror.
+for mem in "$CLAUDE_DIR"/projects/*/memory; do
+  [ -d "$mem" ] || continue
+  [ "$(find "$mem" -maxdepth 1 -name '*.md' ! -name MEMORY.md 2>/dev/null | head -1)" ] || continue
+  name="$(vault_name "$(basename "$(dirname "$mem")")")"
+  [ -n "$(find "$VAULT_DIR/projects/$name/memory" -maxdepth 1 -name '*.md' 2>/dev/null | head -1)" ] \
+    || { echo "  ⚠ UNBACKED memories: ${mem/#$HOME/\~} (expected vault/projects/$name/memory/)"; missing=1; }
+done
+[ "$missing" -eq 0 ] && echo "  [backup] coverage OK — all durables mirrored to vault" || true
 
 exit 0
