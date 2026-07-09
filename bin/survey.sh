@@ -60,7 +60,7 @@ for root in $SURVEY_ROOTS; do
 done
 
 # --- report ---
-n=$(grep -c . "$REPORT" 2>/dev/null || echo 0)
+n=$(wc -l < "$REPORT" 2>/dev/null | tr -d " "); n=${n:-0}
 msg=""
 if [ "${n:-0}" -gt 0 ]; then
   folders=$(sed "s|^$HOME/||" "$REPORT" | awk -F/ 'NF>1{print $1"/"$2} NF==1{print $1}' | sort | uniq -c | sort -rn | head -12 | awk '{printf "%s(%s) ",$2,$1}')
