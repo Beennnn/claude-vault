@@ -98,6 +98,27 @@ state and *flags*; the hooks do the writing.
 
 Full design + the TCC/FDA deep-dive: [`docs/architecture.md`](docs/architecture.md).
 
+## Optional: survey the rest of your disk
+
+Set `SURVEY_ROOTS="$HOME"` and a `SessionStart` hook scans (once/day) for anything **not** backed
+up — durable files outside every backed-up zone **and** git repos anywhere that are uncommitted or
+unpushed. It only *reports*, grouped by folder; Claude then asks you, per finding, which
+[strategy](docs/strategies.md) to use: **(a)** relocate into the vault, **(b)** have your cloud
+client back the folder up in place (great for `~/Downloads`, `~/Desktop`, `~/Documents`), or
+**(c)** symlink a fixed-location folder into the vault. Add folders your cloud already mirrors to
+`BACKED_UP_ZONES` so they stop being flagged.
+
+What the survey treats as "not user data" comes from two community lists —
+[`rules/ignore-dirs.txt`](rules/ignore-dirs.txt) and
+[`rules/ignore-paths.txt`](rules/ignore-paths.txt) — that anyone can extend by PR.
+
+## Contributing
+
+memvault gets smarter as people feed back the special cases they hit on real machines — usually a
+one-line addition to a rules file. See [CONTRIBUTING.md](CONTRIBUTING.md). The golden rule:
+**never** add anything that could hide irreplaceable user data, and relocations are
+quarantine-only (nothing is ever deleted).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

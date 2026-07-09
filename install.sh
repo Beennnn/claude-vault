@@ -20,6 +20,7 @@ SETTINGS="$CLAUDE_DIR/settings.json"
 echo "→ installing scripts to $SHARE/bin"
 mkdir -p "$SHARE/bin" "$(dirname "$CONFIG_DST")" "$VAULT_DIR/memory"
 cp "$here"/bin/*.sh "$SHARE/bin/"; chmod +x "$SHARE"/bin/*.sh
+cp -R "$here/rules" "$SHARE/"                 # community ignore rules (survey reads ../rules)
 cp "$here/config.sh" "$CONFIG_DST"
 
 # --- 2. merge Claude Code hooks (Stop + SessionStart) --------------------------------------

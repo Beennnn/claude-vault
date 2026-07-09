@@ -1,0 +1,32 @@
+# memvault — directory NAMES the survey prunes entirely (regenerable / app-managed / not user
+# data). One name per line; blank lines and #comments ignored. Matched by exact folder name.
+#
+# Found a false positive (an app/cache folder wrongly surfaced by the survey)? Add its folder
+# name here and open a PR — see CONTRIBUTING.md. This list is the community's shared memory of
+# "not user data at risk".
+
+# Build / dependency / cache
+node_modules
+__pycache__
+.venv
+venv
+.cache
+.npm
+.cargo
+.rustup
+.gradle
+.m2
+.tox
+DerivedData
+target
+dist
+build
+
+# macOS / system / app-managed
+Library
+.Trash
+.git
+Applications
+Parallels
+Applications (Parallels)
+Photos Library.photoslibrary

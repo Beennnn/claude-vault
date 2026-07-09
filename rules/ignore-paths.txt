@@ -1,0 +1,22 @@
+# memvault — path SUBSTRINGS the survey excludes (already backed up elsewhere, or app junk).
+# One substring per line; matched literally (grep -F) against absolute file paths. Blank lines
+# and #comments ignored.
+#
+# These are the "already-safe" locations discovered in the wild. Found another (a cloud client's
+# local folder, a device backup, an app store cache)? Add it and open a PR — see CONTRIBUTING.md.
+
+# Cloud-client local folders = the file IS a backup already
+/CloudStorage/
+/Dropbox/
+/.dropbox
+/OneDrive
+/pCloud
+
+# NAS / device backups already replicated
+/SynologyDrive/
+/MobileSync/Backup/
+/Time Machine Backups/
+
+# App stores / caches that slip past dir-name pruning
+/CrashReporter/
+/Caches/
