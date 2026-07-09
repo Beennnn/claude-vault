@@ -46,4 +46,18 @@ done
 # Global instructions
 [ -f "$CLAUDE_DIR/CLAUDE.md" ] && cp "$CLAUDE_DIR/CLAUDE.md" "$VAULT_DIR/CLAUDE.md" 2>/dev/null || true
 
+# ~/dev governance anchors the relocator intentionally leaves in place (the DEV_ROOT/CLAUDE.md
+# structure doc + declared DEV_ANCHOR_DIRS like perso/pro): they're exempt from quarantine AND
+# not caught by the memory loop above → they'd fall through the cracks and never reach the vault.
+# Back them up explicitly so a disk failure can't lose the one local copy.
+[ -f "$DEV_ROOT/CLAUDE.md" ] && cp "$DEV_ROOT/CLAUDE.md" "$VAULT_DIR/dev-CLAUDE.md" 2>/dev/null || true
+for a in ${DEV_ANCHOR_DIRS:-}; do
+  [ -d "$DEV_ROOT/$a" ] || continue
+  name="$(vault_name "${DEV_ROOT//\//-}-$a")"     # perso → projects/perso, pro → projects/pro
+  mkdir -p "$VAULT_DIR/projects/$name" 2>/dev/null || true
+  # anchors are non-code by declaration → mirror their top-level loose files; nested git repos
+  # (e.g. a symlink to a real repo) back themselves up and are skipped by -type f.
+  find "$DEV_ROOT/$a" -maxdepth 1 -type f ! -name '.DS_Store' -exec cp {} "$VAULT_DIR/projects/$name/" \; 2>/dev/null || true
+done
+
 exit 0
