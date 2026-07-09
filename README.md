@@ -63,6 +63,7 @@ response, and a catch-up runs at session start.
 
 | When | Mechanism | Does |
 |---|---|---|
+| On **every memory write** (mid-response) | `PostToolUse` hook → `backup-on-write.sh` | mirrors the file the instant it changes — a long response never waits for `Stop` |
 | After **every response** | `Stop` hook → `backup-durable.sh` | copies memories + `CLAUDE.md` → vault (on-the-fly) |
 | At **session start** | `SessionStart` hook → `relocate.sh` | catch-up backup **+** relocates stray non-git out of `~/dev` **+** flags unpushed repos |
 | **Between sessions** | `launchd` watchdog → `watchdog.sh` | passively flags unpushed repos / non-git in `~/dev` (desktop notification) |
@@ -71,7 +72,20 @@ response, and a catch-up runs at session start.
 Hooks run with Claude Code's FDA (they *can* write the cloud). The watchdog runs headless via
 launchd (it *cannot* — TCC), so it only **flags**; the hooks do the actual fixing.
 
-## Install
+## Let Claude set it up for you 🤖
+
+This repo ships a root [`CLAUDE.md`](CLAUDE.md) that teaches Claude Code how to install itself.
+Just:
+
+```bash
+git clone https://github.com/Beennnn/claude-vault.git && cd claude-vault
+claude   # then say: "set up claude-vault for me"
+```
+
+Claude reads `CLAUDE.md`, detects your cloud drive, writes `config.sh`, runs `./install.sh`,
+and verifies — interactively.
+
+## Install (manual)
 
 ```bash
 git clone https://github.com/Beennnn/claude-vault.git
@@ -80,8 +94,17 @@ cp config.example.sh config.sh      # ← edit DEV_ROOT + VAULT_DIR for your mac
 ./install.sh                        # idempotent; re-run any time
 ```
 
-`install.sh` copies the scripts, wires the two hooks into `~/.claude/settings.json`, installs
-the launchd watchdog, and appends the policy to your `~/.claude/CLAUDE.md`.
+`install.sh` copies the scripts, wires the three hooks (`PostToolUse` + `Stop` +
+`SessionStart`) into `~/.claude/settings.json` **without touching your existing hooks**,
+installs the launchd watchdog, and appends the policy to your `~/.claude/CLAUDE.md`.
+
+## Configuring `~/.claude/CLAUDE.md`
+
+The policy Claude must follow lives in your **global** `~/.claude/CLAUDE.md`. `install.sh`
+appends the block from [`CLAUDE.md.snippet`](CLAUDE.md.snippet) (once — it checks first). That
+block states the 3-tier rule so **every** Claude session obeys it: code → git under `~/dev`,
+durable non-code → the vault, nothing important loose in `~`. Edit the snippet before install
+if you want to tune the wording; re-running install won't duplicate it.
 
 ## Configure your vault (any cloud)
 

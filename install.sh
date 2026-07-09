@@ -36,10 +36,20 @@ def ensure(event, cmd):
     entry = arr[0].setdefault("hooks", [])
     if not any(h.get("command") == cmd for h in entry):
         entry.append({"type": "command", "command": cmd, "timeout": 30, "async": True})
+def ensure_matched(event, matcher, cmd):
+    arr = hooks.setdefault(event, [])
+    block = next((b for b in arr if b.get("matcher") == matcher), None)
+    if block is None:
+        block = {"matcher": matcher, "hooks": []}
+        arr.append(block)
+    entry = block.setdefault("hooks", [])
+    if not any(h.get("command") == cmd for h in entry):
+        entry.append({"type": "command", "command": cmd, "timeout": 15, "async": True})
 ensure("Stop",         f"bash {share}/bin/backup-durable.sh")
 ensure("SessionStart", f"bash {share}/bin/relocate.sh")
+ensure_matched("PostToolUse", "Write|Edit", f"bash {share}/bin/backup-on-write.sh")
 json.dump(d, open(settings_path, "w"), indent=2)
-print("  hooks OK")
+print("  hooks OK (Stop + SessionStart + PostToolUse)")
 PY
 
 # --- 3. launchd watchdog -------------------------------------------------------------------

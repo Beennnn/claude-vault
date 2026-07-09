@@ -1,7 +1,20 @@
 {
   "//": "claude-vault hooks — merge this into the \"hooks\" object of ~/.claude/settings.json.",
-  "//2": "install.sh does this merge for you (with jq). Shown here for reference / manual setup.",
+  "//2": "install.sh does this merge for you (preserving existing hooks). Shown here for reference.",
   "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $HOME/.local/share/claude-vault/bin/backup-on-write.sh",
+            "timeout": 15,
+            "async": true
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
